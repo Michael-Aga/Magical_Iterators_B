@@ -30,7 +30,7 @@ int main() {
     }
     std::cout << std::endl;
 
-    // Use PrimeIterator to display prime numbers only
+    // // Use PrimeIterator to display prime numbers only
     std::cout << "Prime numbers:\n";
     MagicalContainer::PrimeIterator primeIter(container);
     for (auto it = primeIter.begin(); it != primeIter.end(); ++it) {
