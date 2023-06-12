@@ -21,7 +21,8 @@ demo: Demo.o $(OBJECTS)
 test: TestRunner.o StudentTest1.o  $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
-
+my_test: TestRunner.o Test.cpp  $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 tidy:
 	$(TIDY) $(HEADERS) $(TIDY_FLAGS) --
 
@@ -35,4 +36,4 @@ $(OBJECT_PATH)/%.o: $(SOURCE_PATH)/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) --compile $< -o $@
 
 clean:
-	rm -f $(OBJECTS) *.o test* demo*
+	rm -f $(OBJECTS) *.o test* my_test* demo* 

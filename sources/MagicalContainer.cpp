@@ -3,18 +3,44 @@
 using namespace std;
 using namespace ariel;
 
+bool MagicalContainer::isPrime(int num) const
+{
+    if (num < 2)
+    {
+        return false;
+    }
+    for (int i = 2; i * i <= num; i++)
+    {
+        if (num % i == 0)
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+void MagicalContainer::updatePrimesIndices() {
+    this->primes_indexs.clear();
+    for (size_t i = 0; i < size(); ++i) {
+        if (isPrime(getMyContainer()[i])) {
+            primes_indexs.push_back(i);
+        }
+    }
+}
+
 void MagicalContainer::addElement(int elementToAdd)
 {
-    auto it = lower_bound(myContainer->begin(), myContainer->end(), elementToAdd);
-    myContainer->insert(it, elementToAdd);
+    auto it = lower_bound(myContainer.begin(), myContainer.end(), elementToAdd);
+    myContainer.insert(it, elementToAdd);
+    updatePrimesIndices();
 }
 
 void MagicalContainer::removeElement(int elementToDelete)
 {
-    auto it = find(this->myContainer->begin(), this->myContainer->end(), elementToDelete);
-    if (it != this->myContainer->end())
+    auto it = find(this->myContainer.begin(), this->myContainer.end(), elementToDelete);
+    if (it != this->myContainer.end())
     {
-        myContainer->erase(it);
+        myContainer.erase(it);
     }
     else
     {
@@ -24,12 +50,12 @@ void MagicalContainer::removeElement(int elementToDelete)
 
 int MagicalContainer::size() const
 {
-    return this->myContainer->size();
+    return this->myContainer.size();
 }
 
 const deque<int> &MagicalContainer::getMyContainer() const
 {
-    return *this->myContainer;
+    return this->myContainer;
 }
 
 MagicalContainer::AscendingIterator &MagicalContainer::AscendingIterator::operator=(const AscendingIterator &other)
@@ -139,7 +165,22 @@ bool MagicalContainer::SideCrossIterator::operator>(const SideCrossIterator &oth
 {
     if (&myMagical == &(other.myMagical))
     {
-        return this->unified_index > other.unified_index;
+        if (from_front && other.from_front) // both are pointing to the front index
+        {
+            return this->front_index > other.front_index;
+        }
+        else if (!from_front && !other.from_front) // both are pointing to the back index
+        {
+            return this->back_index < other.back_index;
+        }
+        else if (from_front && !other.from_front) // this pointing to front other pointing to back
+        {
+            return this->front_index > other.back_index;
+        }
+        else if (!from_front && other.from_front) // this pointing to back other pointing to front
+        {
+            return this->back_index > other.front_index;
+        }
     }
     throw runtime_error("Comparing iterators from different containers!");
 }
@@ -149,13 +190,17 @@ bool MagicalContainer::SideCrossIterator::operator<(const SideCrossIterator &oth
     // If the objects are from the same container, compare their index locations.
     if (&myMagical == &(other.myMagical))
     {
-        if (from_front)
+        if (*this == other)
         {
-            return this->front_index < other.front_index;
+            return false; // It's not less than if they are equal
+        }
+        else if (*this > other)
+        {
+            return false; // It's not less than if it's greater than
         }
         else
         {
-            return this->back_index < other.back_index;
+            return true; // It must be less than if it's not equal and not greater than
         }
     }
     throw runtime_error("Comparing iterators from different containers!");
@@ -204,7 +249,6 @@ MagicalContainer::SideCrossIterator &MagicalContainer::SideCrossIterator::operat
 
     // After incrementing or decrementing, switch the direction for the next time
     from_front = !from_front;
-    unified_index++;
     return *this;
 }
 
@@ -235,28 +279,12 @@ MagicalContainer::SideCrossIterator MagicalContainer::SideCrossIterator::end()
     return endIterator;
 }
 
-bool MagicalContainer::PrimeIterator::isPrime(int num) const
-{
-    if (num < 2)
-    {
-        return false;
-    }
-    for (int i = 2; i * i <= num; i++)
-    {
-        if (num % i == 0)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 size_t MagicalContainer::PrimeIterator::getPrimeCount() const
 {
     size_t prime_count = 0;
     for (auto element : myMagical.getMyContainer())
     {
-        if (isPrime(element))
+        if (this->myMagical.isPrime(element))
         {
             prime_count++;
         }
@@ -307,38 +335,15 @@ bool MagicalContainer::PrimeIterator::operator<(const PrimeIterator &other) cons
 
 int MagicalContainer::PrimeIterator::operator*()
 {
-    int prime_counter = 0;
-    int current_element = -1;
-
-    // Iterate over the elements until we find the prime number at the current index
-    for (auto element : myMagical.getMyContainer())
-    {
-        if (isPrime(element))
-        {
-            if (prime_counter == current_index)
-            {
-                current_element = element;
-                break;
-            }
-            prime_counter++;
-        }
-    }
-
-    if (current_element == -1)
-    {
-        throw out_of_range("Iterator out of bounds");
-    }
-
-    return current_element;
+    return myMagical.getMyContainer()[static_cast<deque<int>::size_type>(myMagical.primes_indexs[current_index])];
 }
 
 MagicalContainer::PrimeIterator &MagicalContainer::PrimeIterator::operator++()
 {
-    if (current_index >= getPrimeCount())
-    {
+    if (current_index >= myMagical.primes_indexs.size()) {
         throw runtime_error("Iterator out of bounds");
     }
-    current_index++;
+    ++current_index;
     return *this;
 }
 
@@ -357,7 +362,7 @@ MagicalContainer::PrimeIterator MagicalContainer::PrimeIterator::end()
     // count prime numbers
     for (auto element : myMagical.getMyContainer())
     {
-        if (isPrime(element))
+        if (this->myMagical.isPrime(element))
         {
             prime_count++;
         }

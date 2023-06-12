@@ -14,15 +14,17 @@ namespace ariel
     class MagicalContainer
     {
     private:
-        std::shared_ptr<std::deque<int>> myContainer;
+        std::deque<int> myContainer;
+        std::deque<int> primes_indexs;
+        void updatePrimesIndices();
 
     public:
-        MagicalContainer() : myContainer(std::make_shared<std::deque<int>>()) {}
+        MagicalContainer() {}
         void addElement(int element);
         void removeElement(int element);
         int size() const;
-
         const std::deque<int> &getMyContainer() const;
+        bool isPrime(int num) const;
 
         class AscendingIterator
         {
@@ -33,8 +35,17 @@ namespace ariel
         public:
             AscendingIterator(const MagicalContainer &myMagical) : myMagical(myMagical), current_index(0) {}
             AscendingIterator(const AscendingIterator &other) : myMagical(other.myMagical), current_index(other.current_index) {}
-
             ~AscendingIterator() {}
+            AscendingIterator(AscendingIterator &&other) noexcept
+                : myMagical(other.myMagical), current_index(other.current_index) {}
+            AscendingIterator &operator=(AscendingIterator &&other) noexcept
+            {
+                if (this != &other)
+                {
+                    current_index = other.current_index;
+                }
+                return *this;
+            }
 
             AscendingIterator &operator=(const AscendingIterator &other);
             bool operator==(const AscendingIterator &other) const;
@@ -49,15 +60,28 @@ namespace ariel
 
         class SideCrossIterator
         {
+        private:
             const MagicalContainer &myMagical; // Reference to original MagicalContainer
             int front_index;                   // Index of the next front element to be returned
             int back_index;                    // Index of the next back element to be returned
             bool from_front;                   // If true, return element from front next; if false, return element from back next
-            std::size_t unified_index;
+
         public:
             SideCrossIterator(const MagicalContainer &myMagical) : myMagical(myMagical), front_index(0), back_index(myMagical.size() - 1), from_front(true) {}
-            SideCrossIterator(const SideCrossIterator &other) : myMagical(other.myMagical) {}
+            SideCrossIterator(const SideCrossIterator &other) : myMagical(other.myMagical), front_index(other.front_index), back_index(other.back_index), from_front(other.from_front) {}
             ~SideCrossIterator() {}
+            SideCrossIterator(SideCrossIterator &&other) noexcept
+                : myMagical(other.myMagical), front_index(other.front_index), back_index(other.back_index), from_front(other.from_front) {}
+            SideCrossIterator &operator=(SideCrossIterator &&other) noexcept
+            {
+                if (this != &other)
+                {
+                    front_index = other.front_index;
+                    back_index = other.back_index;
+                    from_front = other.from_front;
+                }
+                return *this;
+            }
 
             SideCrossIterator &operator=(const SideCrossIterator &other);
             bool operator==(const SideCrossIterator &other) const;
@@ -75,12 +99,22 @@ namespace ariel
         private:
             const MagicalContainer &myMagical; // Reference to the original MagicalContainer
             std::size_t current_index;         // Index of the current element in the prime number sequence
-            bool isPrime(int num) const;
             std::size_t getPrimeCount() const;
+
         public:
             PrimeIterator(const MagicalContainer &myMagical) : myMagical(myMagical), current_index(0) {}
             PrimeIterator(const PrimeIterator &other) : myMagical(other.myMagical), current_index(other.current_index) {}
             ~PrimeIterator() {}
+            PrimeIterator(PrimeIterator &&other) noexcept
+                : myMagical(other.myMagical), current_index(other.current_index) {}
+            PrimeIterator &operator=(PrimeIterator &&other) noexcept
+            {
+                if (this != &other)
+                {
+                    current_index = other.current_index;
+                }
+                return *this;
+            }
 
             PrimeIterator &operator=(const PrimeIterator &other);
             bool operator==(const PrimeIterator &other) const;
